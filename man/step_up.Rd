@@ -9,13 +9,13 @@ step_up(model, to_test, aic_only = TRUE, dat = "df_put", type = "glm")
 \arguments{
 \item{model}{model to step up from}
 
+\item{to_test}{vector of factor names to add (as strings, not objects)}
+
 \item{aic_only}{Boolean, defaults to TRUE. Don't remember what this does.}
 
 \item{dat}{name of the dataframe}
 
 \item{type}{type of model. Options are 'glmBinomial', 'glm', 'lmer', 'gam', 'gamBinomial'. Defaults to 'glm'.}
-
-\item{to_add}{vector of factor names to add (as strings, not objects)}
 }
 \description{
 Takes a model and a vector of factors to step up with. Builds a model with each one added and does model comparison with the simpler model for each, returning p-values and AIC.
