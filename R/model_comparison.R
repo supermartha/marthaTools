@@ -20,11 +20,19 @@ convert_to_model <- function(model, to_add, dat, type) {
     call <- paste("glm(", dependent, " ~ ", paste(x, collapse=" + "), "+", to_add, ", data=", dat, ")")
   }
   else if (type=='lmer') {
-    if (length(x) == 0) {
-      call <- paste("lmer(", dependent, " ~ ", to_add, "+ (1|WordBin) + (1|Subject), data=", dat, ")")
+    modelTerms <- strsplit(paste(deparse(formula(model)), collapse = ''), '\\+')[[1]]
+    randomEffects <- ''
+    # Figure out if random effect
+    for (item in modelTerms) {
+      item <- trimws(item)
+      if (substr(item, 1, 1)=='(')
+      {randomEffects <- paste(randomEffects, '+', item)}
     }
-    else {call <- paste("lmer(", dependent, " ~ ", paste(x, collapse=" + "), "+", to_add, "+ (1|WordBin) + (1|Subject), data=", dat, ")")}
-    # print(call)
+    if (length(x) == 0) {
+      call <- paste("lmer(", dependent, " ~ ", to_add, randomEffects, ", data=", dat, ")")
+    }
+    else {call <- paste("lmer(", dependent, " ~ ", paste(x, collapse=" + "), "+", to_add, randomEffects, ", data=", dat, ")")}
+    print(call)
   }
   else if (type=='gam') {
     smooth <- paste("te(", x[length(x)-1], ",", x[length(x)], ")")
@@ -51,7 +59,7 @@ convert_to_model <- function(model, to_add, dat, type) {
 #'
 #' Takes a model and a vector of factors to step up with. Builds a model with each one added and does model comparison with the simpler model for each, returning p-values and AIC.
 #' @param model model to step up from
-#' @param to_add vector of factor names to add (as strings, not objects)
+#' @param to_test vector of factor names to add (as strings, not objects)
 #' @param aic_only Boolean, defaults to TRUE. Don't remember what this does.
 #' @param dat name of the dataframe
 #' @param type type of model. Options are 'glmBinomial', 'glm', 'lmer', 'gam', 'gamBinomial'. Defaults to 'glm'.
