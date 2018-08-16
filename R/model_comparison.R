@@ -2,12 +2,12 @@
 #'
 #' Takes a model and a factor to add and returns a new model with the additional factor to add. Used by the step_up function.
 #' @param model original model
-#' @param to_add string of the name of the factor to add
+#' @param to_add vector of strings of names of the factors to test
 #' @param dat name of the dataframe
-#' @param type type of model. Options are 'glmBinomial', 'glm', 'lmer', 'gam', 'gamBinomial'
+#' @param type type of model. Options are 'glmBinomial', 'glm', 'lmer', 'glmer' (binomial), 'gam', or 'gamBinomial'
 #' @keywords model comparison
 #' @export
-#' @examples
+#' @examples step_up(myModel, c("gender", "region", "age"), dat="myData", type="lmer")
 #' convert_to_model()
 
 convert_to_model <- function(model, to_add, dat, type) {
@@ -25,8 +25,15 @@ convert_to_model <- function(model, to_add, dat, type) {
     # Figure out if random effect
     for (item in modelTerms) {
       item <- trimws(item)
-      if (substr(item, 1, 1)=='(')
-      {randomEffects <- paste(randomEffects, '+', item)}
+      lastChar <- substr(item, nchar(item), nchar(item))
+      if (substr(item, 1, 1)=='('){
+        if (lastChar==')') {randomEffects <- paste(randomEffects, '+', item)}
+        else {firstHalf <- item}
+      }
+      else if (lastChar==')') {
+        newEffect <- paste(firstHalf, '+', item)
+        randomEffects <- paste(randomEffects, '+', newEffect)
+      }
     }
     if (length(x) == 0) {
       call <- paste("lmer(", dependent, " ~ ", to_add, randomEffects, ", data=", dat, ")")
@@ -34,6 +41,29 @@ convert_to_model <- function(model, to_add, dat, type) {
     else {call <- paste("lmer(", dependent, " ~ ", paste(x, collapse=" + "), "+", to_add, randomEffects, ", data=", dat, ")")}
     print(call)
   }
+
+  else if (type=='glmer') {
+    modelTerms <- strsplit(paste(deparse(formula(model)), collapse = ''), '\\+')[[1]]
+    randomEffects <- ''
+    # Figure out if random effect
+    for (item in modelTerms) {
+      item <- trimws(item)
+      lastChar <- substr(item, nchar(item), nchar(item))
+      if (substr(item, 1, 1)=='('){
+        if (lastChar==')') {randomEffects <- paste(randomEffects, '+', item)}
+        else {firstHalf <- item}
+      }
+      else if (lastChar==')') {
+        newEffect <- paste(firstHalf, '+', item)
+        randomEffects <- paste(randomEffects, '+', newEffect)
+      }
+    }
+    if (length(x) == 0) {
+      call <- paste("glmer(", dependent, " ~ ", to_add, randomEffects, ", data=", dat, ", family='binomial', glmerControl(optimizer='bobyqa', optCtrl=list(maxfun=2e5)))")
+    }
+    else {call <- paste("glmer(", dependent, " ~ ", paste(x, collapse=" + "), "+", to_add, randomEffects, ", data=", dat, ", family='binomial', glmerControl(optimizer='bobyqa', optCtrl=list(maxfun=2e5)))")}
+  }
+
   else if (type=='gam') {
     smooth <- paste("te(", x[length(x)-1], ",", x[length(x)], ")")
     if (length(x) > 2) {x <- x[1:(length(x)-2)]
@@ -50,7 +80,7 @@ convert_to_model <- function(model, to_add, dat, type) {
     else {to_paste <- ''}
     call <- paste("gam(", dependent, " ~ ", to_paste, to_add, "+", smooth, ", data=", dat, ", family='binomial')")
   }
-  # print(paste('call:', call))
+  #print(paste('call:', call))
   new <- eval(parse(text = call))
   return(new)
 }
