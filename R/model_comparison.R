@@ -108,9 +108,8 @@ step_up <- function(model, to_test, aic_only=TRUE, dat='df_put', type="glm") {
     print(paste('        ...testing', factor))
     new <- convert_to_model(model, factor, dat, type)
     res <- anova(model, new, test="Chisq")
-    # print(res)
     p <- c(p, res[["Pr(>Chi)"]][2])
-    if (type=="lmer") {p <- c(p, res[["Pr(>Chisq)"]][2])}
+    if (type %in% c("lmer", "glmer")) {p <- c(p, res[["Pr(>Chisq)"]][2])}
     aic <- c(aic, extractAIC(new)[[2]])
     # print(p)
   }
