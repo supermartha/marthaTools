@@ -9,16 +9,17 @@ convert_to_model(model, to_add, dat, type)
 \arguments{
 \item{model}{original model}
 
-\item{to_add}{string of the name of the factor to add}
+\item{to_add}{vector of strings of names of the factors to test}
 
 \item{dat}{name of the dataframe}
 
-\item{type}{type of model. Options are 'glmBinomial', 'glm', 'lmer', 'gam', 'gamBinomial'}
+\item{type}{type of model. Options are 'glmBinomial', 'glm', 'lmer', 'glmer' (binomial), 'gam', or 'gamBinomial'}
 }
 \description{
 Takes a model and a factor to add and returns a new model with the additional factor to add. Used by the step_up function.
 }
 \examples{
+step_up(myModel, c("gender", "region", "age"), dat="myData", type="lmer")
 convert_to_model()
 }
 \keyword{comparison}
