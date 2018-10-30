@@ -39,7 +39,7 @@ convert_to_model <- function(model, to_add, dat, type) {
       call <- paste("lmer(", dependent, " ~ ", to_add, randomEffects, ", data=", dat, ")")
     }
     else {call <- paste("lmer(", dependent, " ~ ", paste(x, collapse=" + "), "+", to_add, randomEffects, ", data=", dat, ")")}
-    print(call)
+    # print(call)
   }
 
   else if (type=='glmer') {
@@ -173,6 +173,23 @@ step_down <- function(model, dependent, aic_only=FALSE, dat="temp") {
 
   predictors <- attr(terms(model), "term.labels")
 
+  modelTerms <- strsplit(paste(deparse(formula(model)), collapse = ''), '\\+')[[1]]
+  randomEffects <- ''
+  # Figure out if random effect
+  for (item in modelTerms) {
+    item <- trimws(item)
+    lastChar <- substr(item, nchar(item), nchar(item))
+    if (substr(item, 1, 1)=='('){
+      if (lastChar==')') {randomEffects <- paste(randomEffects, '+', item)}
+      else {firstHalf <- item}
+    }
+    else if (lastChar==')') {
+      newEffect <- paste(firstHalf, '+', item)
+      randomEffects <- paste(randomEffects, '+', newEffect)
+    }
+  }
+
+
   for (i in seq(length(predictors))) {
     print(paste('        ...testing', predictors[i]))
     before <- predictors[seq(1,i-1)]
@@ -180,7 +197,7 @@ step_down <- function(model, dependent, aic_only=FALSE, dat="temp") {
     after <- predictors[seq(i+1,length(predictors))]
     if (i == length(predictors)) {after <- c()}
     new_predictors <- c(before, after)
-    call <- paste("lmer(",dependent," ~ ", paste(new_predictors, collapse=" + "), "+ (1 +Task|Subject) + (1 | FollowingSegment/Word) + (1 | PrecedingSegment/Word), data=,", dat,")")
+    call <- paste("lmer(",dependent," ~ ", paste(new_predictors, collapse=" + "), "+", randomEffects, ", data=,", dat,")")
     new <- eval(parse(text=call))
     res <- anova(model, new)
     #print(res)
