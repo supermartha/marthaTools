@@ -4,8 +4,10 @@ Some functions I use over and over again. Not super well documented because they
 
 ## Installation
 If you don't already have it installed, you'll need the *devtools* package.
+```
   library(devtools)
   install_github('supermartha/marthaTools')
+```
   
 ## Uses
 * **step_up()** and **step_down()**: functions for building regression models.
